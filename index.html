@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <title>UNIVAX - One Editor To Rule Them All</title>
+    <style>
+      body {
+        position: absolute;
+        margin: 0; left: 0; right: 0; top: 0; bottom: 0;
+        white-space: pre;
+        font-family: monospace;
+        font-size: 150%;
+        line-height: 250%;
+      }
+    </style>
+  </head>
+  <body>
+    <p>helloooo</p>
+  </body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  $(function (event) {
+    var socket = io();
+
+    // Forward all input to the server.
+    function type(ch) {
+      socket.emit('typed', ch);
+    }
+
+    var body = $(document.body);
+    body.keypress(function (event) {
+      var ch = String.fromCharCode(event.keyCode || event.charCode);
+      if (event.ctrlKey || event.altKey || event.metaKey)
+        return;
+      type(ch);
+      event.preventDefault();
+    });
+    body.keydown(function (event) {
+      if (event.ctrlKey || event.altKey || event.metaKey)
+        return;
+      if (event.keyCode == 13) {
+        type('\n');
+        event.preventDefault();
+      }
+    });
+
+    // Still to implement:
+    // 1. handling the selection
+    // 
+    
+
+    // Update the DOM when the server tells us to.
+    var me;
+    var text;
+    var cursors;
+
+    function render() {
+      body.empty();
+
+      var cursorsByOffset = [];
+      for (var id in cursors)
+        cursorsByOffset.push({id: Number(id), offset: cursors[id]});
+      cursorsByOffset.sort(function (a, b) { return a.offset - b.offset; });
+
+      var charsWritten = 0;
+      for (var i = 0; i < cursorsByOffset.length; i++) {
+        var cursor = cursorsByOffset[i];
+        if (cursor.offset > charsWritten) {
+          body.append(text.slice(charsWritten, cursor.offset));
+          charsWritten = cursor.offset;
+        }
+        var span = document.createElement("span");
+        span.className = "cursor";
+        span = $(span);
+        span.css({width: "-4px", border: "1px solid red"});
+        body.append(span);
+      }
+      body.append(text.slice(charsWritten, text.length));
+    }
+
+    socket.on("update", function (event) {
+      console.log("received update event", event);
+      me = event.id;
+      text = event.document;
+      cursors = event.cursors;
+      render();
+    });
+
+    socket.on("insert", function (event) {
+      console.log("received insert event", event);
+      text = text.slice(0, event.offset) + event.ch + text.slice(event.offset, text.length);
+      for (var id in cursors) {
+        id = Number(id);
+        if (cursors[id] > event.offset || id === event.user)
+          cursors[id]++;
+      }
+      render();
+    });
+
+    socket.on("user.enter", function (id) {
+      cursors[id] = 0;
+      render();
+    });
+
+    socket.on("user.exit", function (id) {
+      delete cursors[id];
+      render();
+    });
+
+    body.text("");
+    body.focus();
+  });
+</script>
