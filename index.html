@@ -9,7 +9,22 @@
         white-space: pre;
         font-family: monospace;
         font-size: 150%;
-        line-height: 250%;
+        line-height: 150%;
+        background-color: white;
+        color: black;
+      }
+      span.cursor-container {
+        position: relative;
+        width: 0;
+      }
+      span.cursor {
+        content: '';
+        position: absolute;
+        top: -0.1em;
+        left: -0.04em;
+        height: 1.3em;
+        border: 0.08em solid black;
+        z-index: 1;
       }
     </style>
   </head>
@@ -28,8 +43,9 @@
     // the mouse; the selection (which should be supported both mouse and
     // keyboard); copy and paste; shift/alt/ctrl in combination with movement
     // keys; remembering what column we should be in when moving up or down
-    // across a blank line; any code editing features at all, like automatic
-    // indentation or code highlighting...
+    // across a blank line; any kind of special support for long lines or word
+    // wrapping; any code editing features at all, like automatic indentation
+    // or code highlighting...
 
     // Forward all input to the server.
     function type(ch) { socket.emit('type', ch); }
@@ -70,6 +86,27 @@
     var text;
     var cursors;
 
+    // Each user gets his or her own artisinally crafted color. The current
+    // user gets an bold, opaque color; everyone else's cursor is pastel and
+    // translucent, but visible.
+    function computeCursorColor(id) {
+      // phi is the golden ratio, 2/(sqrt(5)-1).  We want to assign colors so
+      // that contiguous ranges of user-ids (like 15, 16, 17) will get visually
+      // distinct colors. Amazingly, this simple formula is just about ideal.
+      // See Knuth, _The Art of Computer Programming_ Second Edition, Volume 3,
+      // section 6.4 "Hashing", p. 517-519 on Fibonacci hashing.
+      //
+      // We might do still better by mapping h through a function to more
+      // uniformly distribute selections across the hues that human vision
+      // readily distinguishes. As it stands we get a lot of greens and blues,
+      // a fair amount of reds and purples, but not many yellows and browns.
+
+      var phi = 1.6180339887;
+      var h = (id * 360 / phi) % 360;
+      var sla = (id === me ? "100%, 35%, 1.0" : "40%, 50%, 0.3");
+      return "hsla(" + h + ", " + sla + ")";
+    }
+
     function render() {
       body.empty();
 
@@ -85,11 +122,13 @@
           body.append(text.slice(charsWritten, cursor.offset));
           charsWritten = cursor.offset;
         }
-        var span = document.createElement("span");
-        span.className = "cursor";
-        span = $(span);
-        span.css({width: "-4px", border: "1px solid red"});
-        body.append(span);
+        var container = document.createElement("span");
+        container.className = "cursor-container";
+        var border = document.createElement("span");
+        border.className = "cursor";
+        border.style.borderColor = computeCursorColor(cursor.id);
+        container.appendChild(border);
+        body.append($(container));
       }
       body.append(text.slice(charsWritten, text.length));
     }
