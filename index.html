@@ -115,11 +115,15 @@
         cursorsByOffset.push({id: Number(id), offset: cursors[id]});
       cursorsByOffset.sort(function (a, b) { return a.offset - b.offset; });
 
+      function write(str) {
+        document.body.appendChild(document.createTextNode(str));
+      }
+
       var charsWritten = 0;
       for (var i = 0; i < cursorsByOffset.length; i++) {
         var cursor = cursorsByOffset[i];
         if (cursor.offset > charsWritten) {
-          body.append(text.slice(charsWritten, cursor.offset));
+          write(text.slice(charsWritten, cursor.offset));
           charsWritten = cursor.offset;
         }
         var container = document.createElement("span");
@@ -128,9 +132,9 @@
         border.className = "cursor";
         border.style.borderColor = computeCursorColor(cursor.id);
         container.appendChild(border);
-        body.append($(container));
+        document.body.appendChild(container);
       }
-      body.append(text.slice(charsWritten, text.length));
+      write(text.slice(charsWritten, text.length));
     }
 
     socket.on("welcome", function (event) {
