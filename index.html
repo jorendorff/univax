@@ -23,16 +23,21 @@
   $(function (event) {
     var socket = io();
 
-    // Forward all input to the server.
-    function type(ch) {
-      socket.emit('type', ch);
-    }
+    // Of course, implementing a text editor from scratch in a few lines of
+    // code is a joke. Missing features include: moving the cursor by clicking
+    // the mouse; the selection (which should be supported both mouse and
+    // keyboard); copy and paste; shift/alt/ctrl in combination with movement
+    // keys; remembering what column we should be in when moving up or down
+    // across a blank line; any code editing features at all, like automatic
+    // indentation or code highlighting...
 
-    function move(dir) {
-      socket.emit('move', dir);
-    }
+    // Forward all input to the server.
+    function type(ch) { socket.emit('type', ch); }
+    function move(dir) { socket.emit('move', dir); }
+    function del(dir) { socket.emit('delete', dir); }
 
     var body = $(document.body);
+
     body.keypress(function (event) {
       var ch = String.fromCharCode(event.keyCode || event.charCode);
       if (event.ctrlKey || event.altKey || event.metaKey)
@@ -40,27 +45,25 @@
       type(ch);
       event.preventDefault();
     });
+
     body.keydown(function (event) {
       if (event.ctrlKey || event.altKey || event.metaKey)
         return;
       switch (event.keyCode) {
-        case 13: type("\n"); break;
-        case 36: move("home"); break;
-        case 35: move("end"); break;
-        case 37: move("left"); break;
-        case 38: move("up"); break;
+        case  8: del("left");   break;
+        case 13: type("\n");    break;
+        case 36: move("home");  break;
+        case 35: move("end");   break;
+        case 37: move("left");  break;
+        case 38: move("up");    break;
         case 39: move("right"); break;
-        case 40: move("down"); break;
+        case 40: move("down");  break;
+        case 46: del("right");  break;
         default:
           return;
       }
       event.preventDefault();
     });
-
-    // Still to implement:
-    // 1. handling the selection
-    // 2. backspace/delete
-    
 
     // Update the DOM when the server tells us to.
     var me;
@@ -112,7 +115,22 @@
       cursors[event.user] = event.offset;
       render();
     });
-    
+
+    socket.on("deleted", function (event) {
+      var start = event.start,
+          stop = event.stop,
+          len = stop - start;
+
+      text = text.slice(0, start) + text.slice(stop, text.length);
+      for (var id in cursors) {
+        id = Number(id);
+        var pos = cursors[id];
+        if (pos > start)
+          cursors[id] = (pos > stop ? pos - len : start);
+      }
+      render();
+    });
+
     socket.on("connected", function (id) {
       cursors[id] = 0;
       render();

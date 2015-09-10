@@ -116,7 +116,9 @@ io.on('connection', function (socket) {
     var offset = cursors[userId];
     text = text.slice(0, offset) + ch + text.slice(offset, text.length);
 
-    // ...and advance all other users' cursors. (Puzzle over this code!)
+    // ...and advance all other users' cursors. (There are many neat puzzles in
+    // the next few lines of code, starting with: Why do we need to do this in
+    // the first place?)
     for (var u in cursors) {
       u = Number(u);  // because property keys are strings, bleah JavaScript
       if (cursors[u] > offset || u === userId)
@@ -141,6 +143,29 @@ io.on('connection', function (socket) {
     }
   });
 
+  // When the user hits backspace or delete...
+  socket.on('delete', dir => {
+    // ... first figure out if deleting in that direction is possible...
+    var here = cursors[userId];
+    var there = computeMove(text, here, dir);
+
+    // ...and if so, update the model and notify all clients.
+    if (there !== undefined) {
+      var start = Math.min(here, there);
+      var stop = Math.max(here, there);
+      var len = stop - start;  // should always be 1, for now!
+
+      text = text.slice(0, start) + text.slice(stop, text.length);
+      for (var u in cursors) {
+        u = Number(u);
+        var pos = cursors[u];
+        if (pos > start)
+          cursors[u] = (pos > stop ? pos - len : start);
+      }
+      io.emit('deleted', {start: start, stop: stop});
+    }
+  });
+
   // When this user disconnects, delete their cursor.
   socket.on('disconnect', () => {
     delete cursors[userId];
@@ -152,7 +177,7 @@ io.on('connection', function (socket) {
   // OK. Since this user just connected, send them the current state.
   socket.emit('welcome', {
     id: userId,
-    document: text, 
+    document: text,
     cursors: cursors
   });
 
