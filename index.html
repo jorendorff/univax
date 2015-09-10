@@ -25,7 +25,11 @@
 
     // Forward all input to the server.
     function type(ch) {
-      socket.emit('typed', ch);
+      socket.emit('type', ch);
+    }
+
+    function move(dir) {
+      socket.emit('move', dir);
     }
 
     var body = $(document.body);
@@ -39,15 +43,23 @@
     body.keydown(function (event) {
       if (event.ctrlKey || event.altKey || event.metaKey)
         return;
-      if (event.keyCode == 13) {
-        type('\n');
-        event.preventDefault();
+      switch (event.keyCode) {
+        case 13: type("\n"); break;
+        case 36: move("home"); break;
+        case 35: move("end"); break;
+        case 37: move("left"); break;
+        case 38: move("up"); break;
+        case 39: move("right"); break;
+        case 40: move("down"); break;
+        default:
+          return;
       }
+      event.preventDefault();
     });
 
     // Still to implement:
     // 1. handling the selection
-    // 
+    // 2. backspace/delete
     
 
     // Update the DOM when the server tells us to.
@@ -79,16 +91,14 @@
       body.append(text.slice(charsWritten, text.length));
     }
 
-    socket.on("update", function (event) {
-      console.log("received update event", event);
+    socket.on("welcome", function (event) {
       me = event.id;
       text = event.document;
       cursors = event.cursors;
       render();
     });
 
-    socket.on("insert", function (event) {
-      console.log("received insert event", event);
+    socket.on("typed", function (event) {
       text = text.slice(0, event.offset) + event.ch + text.slice(event.offset, text.length);
       for (var id in cursors) {
         id = Number(id);
@@ -98,12 +108,17 @@
       render();
     });
 
-    socket.on("user.enter", function (id) {
+    socket.on("moved", function (event) {
+      cursors[event.user] = event.offset;
+      render();
+    });
+    
+    socket.on("connected", function (id) {
       cursors[id] = 0;
       render();
     });
 
-    socket.on("user.exit", function (id) {
+    socket.on("disconnected", function (id) {
       delete cursors[id];
       render();
     });
