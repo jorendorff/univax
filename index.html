@@ -148,10 +148,11 @@
 
     socket.on("typed", function (event) {
       text = text.slice(0, event.offset) + event.ch + text.slice(event.offset, text.length);
+      var len = event.ch.length;
       for (var id in cursors) {
         id = Number(id);
         if (cursors[id] > event.offset || id === event.user)
-          cursors[id]++;
+          cursors[id] += len;
       }
       render();
     });

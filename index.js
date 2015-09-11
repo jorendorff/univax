@@ -122,7 +122,7 @@ io.on('connection', function (socket) {
     for (var u in cursors) {
       u = Number(u);  // because property keys are strings, bleah JavaScript
       if (cursors[u] > offset || u === userId)
-        cursors[u]++;
+        cursors[u] += ch.length;
     }
 
     // Notify everyone (including this user!) that a character was typed. Even
