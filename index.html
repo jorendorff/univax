@@ -38,12 +38,14 @@
 
     // Of course, implementing a text editor from scratch in a few lines of
     // code is a joke. Missing features include: moving the cursor by clicking
-    // the mouse; the selection (which should be supported both mouse and
+    // the mouse; selecting text (which should be supported both mouse and
     // keyboard); copy and paste; shift/alt/ctrl in combination with movement
     // keys; remembering what column we should be in when moving up or down
     // across a blank line; any kind of special support for long lines or word
-    // wrapping; any code editing features at all, like automatic indentation
-    // or code highlighting...
+    // wrapping; spell-checking; any code editing features at all, like
+    // automatic indentation or code highlighting; support for right-to-left
+    // scripts like Hebrew and Arabic; support for non-BMP characters like
+    // emoji...
 
     // Forward all input to the server.
     function type(ch) { socket.emit('type', ch); }

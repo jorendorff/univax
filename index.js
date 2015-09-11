@@ -62,12 +62,19 @@ function computeMove(text, offset, dir) {
     case "left":
       if (offset === 0)
         return undefined;  // already at top left corner; nowhere to go
+
+      // Unicode bug: Just subtracting 1 here is simple but wildly incorrect.
+      // If we allowed non-BMP characters (surrogate pairs) in the document,
+      // moving by 1 could put you in between the two halves of a single
+      // character. Same thing if you're trying to move past a character with a
+      // combining accent. If you're editing Hebrew or Arabic text, pressing
+      // the left arrow key will move the cursor right. PRs welcome!
       return offset - 1;
 
     case "right":
       if (offset === text.length)
         return undefined;  // already at end of document; nowhere to go
-      return offset + 1;
+      return offset + 1;  // Unicode bug: See above.
 
     case "home": {
       var start = lineStart(offset);
@@ -97,9 +104,45 @@ function computeMove(text, offset, dir) {
     }
 
     default:
-      console.log("unrecognized move code:", dir);
-      return undefined;
+      throw new TypeError("unrecognized move code");
   }
+}
+
+// This array can be used to validate a direction before calling computeMove().
+var directions = ["left", "right", "home", "end", "up", "down"];
+
+// Return true if the given character is allowed in the document. This is of
+// course a balancing act between security and letting Unicode do its job.  We
+// are super permissive. If you're reading this to find some clever path
+// through this code, to wreck the document: don't bother. It's too easy!
+function isPermittedCharacter(ch) {
+  // Since socket.io lets a client send just about anything, check that ch is
+  // at least the right type.
+  if (typeof ch !== "string")
+    return false;
+
+  // Users must type one character at a time. Unfortunately this means we're
+  // banning all characters outside the BMP - but that is necessary since other
+  // parts of the code do not support keeping surrogates paired at all times.
+  // Fix computeMove() first if you want to fix this.
+  if (ch.length !== 1)
+    return false;
+
+  // Ban a few ASCII control characters, like '\r' and '\b'.
+  var c = ch.charCodeAt(0);
+  if (c < 9 || (c >= 11 && c <= 31) || c === 127)
+    return false;
+
+  // Ban unpaired surrogate code points.
+  if (c >= 0xD800 && c <= 0xDFFF)
+    return false;
+
+  // Ban a few Unicode control characters, including Bidi control characters.
+  if ((c >= 0x2028 && c <= 0x202F) || (c >= 0x2066 && c <= 0x206F))
+    return false;
+
+  // Otherwise, allow it.
+  return true;
 }
 
 // Now all we have to do is handle socket.io connections so people can interact
@@ -110,6 +153,9 @@ io.on('connection', function (socket) {
 
   // When this user types a character...
   socket.on('type', ch => {
+    // ...after some basic input validation...
+    if (!isPermittedCharacter(ch))
+      return;
     console.log("User " + userId + " typed character `" + ch + "`");
 
     // ...put it in the document...
@@ -133,6 +179,10 @@ io.on('connection', function (socket) {
 
   // When the user hits an arrow key...
   socket.on('move', dir => {
+    // ...after some basic input validation...
+    if (directions.indexOf(dir) === -1)
+      return;
+
     // ...figure out if the move is actually possible, and if so, where we're
     // moving to...
     var newOffset = computeMove(text, cursors[userId], dir);
@@ -145,6 +195,10 @@ io.on('connection', function (socket) {
 
   // When the user hits backspace or delete...
   socket.on('delete', dir => {
+    // ...after some basic input validation...
+    if (directions.indexOf(dir) === -1)
+      return;
+
     // ... first figure out if deleting in that direction is possible...
     var here = cursors[userId];
     var there = computeMove(text, here, dir);
