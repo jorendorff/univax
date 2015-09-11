@@ -105,6 +105,10 @@
       return "hsla(" + h + ", " + sla + ")";
     }
 
+    // We implement rendering in the stupidest possible way: by obliterating
+    // the entire page and rebuilding it from scratch using the DOM! React
+    // tree-diffing could make it faster, but as it's mostly just text, this is
+    // already stupidly fast.
     function render() {
       body.empty();
 
