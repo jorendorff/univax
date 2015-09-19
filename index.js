@@ -8,6 +8,9 @@ var server = require('http').Server(app);
 // Add socket.io for fast communication between browser and server.
 var io = require('socket.io')(server);
 
+// Add slowio.js to slow that down a bit.
+io = require("./lib/slowio.js").addLatency(io);
+
 // The server only knows how to send a single page, index.html.  (It's not
 // *quite* that simple really. Attaching socket.io to the server, above, adds
 // more functionality to the server. It can now serve 'socket.io/socket.io.js',
