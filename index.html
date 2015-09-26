@@ -52,9 +52,9 @@
     function move(dir) { socket.emit('move', dir); }
     function del(dir) { socket.emit('delete', dir); }
 
-    var body = $(document.body);
+    var editor = $(document.body);
 
-    body.keypress(function (event) {
+    editor.keypress(function (event) {
       var ch = String.fromCharCode(event.keyCode || event.charCode);
       if (event.ctrlKey || event.altKey || event.metaKey)
         return;
@@ -62,7 +62,7 @@
       event.preventDefault();
     });
 
-    body.keydown(function (event) {
+    editor.keydown(function (event) {
       if (event.ctrlKey || event.altKey || event.metaKey)
         return;
       switch (event.keyCode) {
@@ -112,7 +112,7 @@
     // tree-diffing could make it faster, but as it's mostly just text, this is
     // already stupidly fast.
     function render() {
-      body.empty();
+      editor.empty();
 
       var cursorsByOffset = [];
       for (var id in cursors)
@@ -120,7 +120,7 @@
       cursorsByOffset.sort(function (a, b) { return a.offset - b.offset; });
 
       function write(str) {
-        document.body.appendChild(document.createTextNode(str));
+        editor[0].appendChild(document.createTextNode(str));
       }
 
       var charsWritten = 0;
@@ -136,7 +136,7 @@
         border.className = "cursor";
         border.style.borderColor = computeCursorColor(cursor.id);
         container.appendChild(border);
-        document.body.appendChild(container);
+        editor[0].appendChild(container);
       }
       write(text.slice(charsWritten, text.length));
     }
@@ -189,7 +189,7 @@
       render();
     });
 
-    body.empty();
-    body.focus();
+    editor.empty();
+    editor.focus();
   });
 </script>
