@@ -3,9 +3,10 @@
   <head>
     <title>UNIVAX - One Editor To Rule Them All</title>
     <style>
-      body {
+      div#editor {
         position: absolute;
         margin: 0; left: 0; right: 0; top: 0; bottom: 0;
+        padding-left: 0.2em;
         white-space: pre;
         font-family: monospace;
         font-size: 150%;
@@ -28,7 +29,10 @@
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <!-- The tabindex= here causes the div to be focusable. -->
+    <div id="editor" tabindex="0"></div>
+  </body>
 </html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
@@ -52,7 +56,7 @@
     function move(dir) { socket.emit('move', dir); }
     function del(dir) { socket.emit('delete', dir); }
 
-    var editor = $(document.body);
+    var editor = $("#editor");
 
     editor.keypress(function (event) {
       var ch = String.fromCharCode(event.keyCode || event.charCode);
