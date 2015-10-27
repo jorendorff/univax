@@ -1,5 +1,7 @@
 # Univax: How not to implement collaborative editing
 
+*(stab 3)*
+
 All the code in here is meant as a motivating example
 for a talk on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
 
@@ -25,3 +27,7 @@ why this is a bad idea:
 > *   layout, widgets, and dialogs
 > *   localization, theming, and preferences
 > *   extension loading at runtime, with hundreds already written
+
+There are other approaches, but they all have problems.
+See [Clobberation](https://github.com/jorendorff/clobberation)
+and [Quilljoy](https://github.com/jorendorff/quilljoy).
