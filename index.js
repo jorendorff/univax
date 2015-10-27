@@ -5,11 +5,9 @@
 var app = require('express')();
 var server = require('http').Server(app);
 
-// Add socket.io for fast communication between browser and server.
-var io = require('socket.io')(server);
-
-// Add slowio.js to slow that down a bit.
-io = require("./lib/slowio.js").addLatency(io);
+// Add slow.io for communication between browser and server
+// with adjustable simulated latency.
+var io = require('slow.io')(server);
 
 // The server only knows how to send a single page, index.html.  (It's not
 // *quite* that simple really. Attaching socket.io to the server, above, adds
