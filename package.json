@@ -1,5 +1,5 @@
 {
-  "name": "Univax",
+  "name": "univax",
   "version": "0.0.1",
   "description": "How not to do collaborative text editing",
   "main": "index.js",
@@ -8,16 +8,18 @@
   },
   "dependencies": {
     "express": "^4.13.3",
-    "slow.io": "file:../slow.io",
-    "socket.io": "^1.3.6",
-    "socket.io-client": "^1.3.6"
+    "slow.io": "^0.0.1"
   },
   "engines": {
     "node": "4.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jorendorff/univax"
+    "url": "git+ssh://git@github.com/jorendorff/univax.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jorendorff/univax/issues"
+  },
+  "homepage": "https://github.com/jorendorff/univax#readme"
 }
