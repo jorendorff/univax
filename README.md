@@ -1,4 +1,4 @@
-# Univax: How not to implement collaborative editing
+# UNIVAX: How not to implement collaborative editing
 
 *(stab 3)*
 
