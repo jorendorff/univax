@@ -2,8 +2,8 @@
 
 *(stab 3)*
 
-All the code in here is meant as a motivating example
-for a talk on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
+All the code in here is meant as a motivating example for
+[a talk on CRDTs](https://github.com/jorendorff/talks/blob/master/textarea-distributed/textarea-distributed.md).
 
 The hope is that the code will be complicated enough,
 or the latency bad enough,
