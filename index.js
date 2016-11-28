@@ -10,9 +10,9 @@ var server = require('http').Server(app);
 var io = require('slow.io')(server);
 
 // The server only knows how to send a single page, index.html.  (It's not
-// *quite* that simple really. Attaching socket.io to the server, above, adds
-// more functionality to the server. It can now serve 'socket.io/socket.io.js',
-// the browser-side half of socket.io.)
+// *quite* that simple really. Attaching slow.io to the server, above, adds
+// more functionality to the server. It can now serve a couple of scripts:
+// '/socket.io/socket.io.js' and '/slow.io/slow.io.js'.)
 app.get('/', function (req, res) {
   res.sendFile(__dirname + "/index.html");
 });
